@@ -18,7 +18,8 @@ jobs:
           PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY  }}
           HOSTNAME: ${{ secrets.HOST_DNS  }}
           USER_NAME: ${{ secrets.USERNAME  }}
+          TARGET: ${{ secrets.TARGET_DIR }}
 
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} bash deploy/sync.sh
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} && cd TARGET && bash deploy/sync.sh
