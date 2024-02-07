@@ -15,7 +15,6 @@ npm install
 # build the application
 echo "building application"
 npm run build
-
 # run the application
 echo "starting the application"
 pm2 reload ecosystem.config.js
