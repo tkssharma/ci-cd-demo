@@ -1,4 +1,4 @@
-name: deploy-service
+name: app-deploy-workflow
 
 # Trigger deployment only on push to master branch
 on:

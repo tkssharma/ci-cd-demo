@@ -1,4 +1,4 @@
-name: Node.js setup
+name: app-setup-workflow
 
 on:
   push:
