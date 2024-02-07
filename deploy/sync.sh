@@ -18,7 +18,6 @@ npm run build
 
 # run the application
 echo "starting the application"
-cd ~
-pm2 reload ../ecosystem.config.js
+pm2 reload ecosystem.config.js
 
 echo "deployment process completed"
