@@ -5,19 +5,20 @@ on:
   push:
     branches:
       - main
+
 jobs:
-  build:
-    name: Build
+  deploy:
+    name: Deploying NodeJS Application
     runs-on: ubuntu-latest
+
     steps:
-      - name: Executing remote ssh commands using ssh key
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_DNS }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd /home/ubuntu/node-api
-            npm install
-            npm build
-            npm run deploy
+      - uses: actions/checkout@v3
+      - name: deploying application to EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY  }}
+          HOSTNAME: ${{ secrets.HOST_DNS  }}
+          USER_NAME: ${{ secrets.USERNAME  }}
+
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} bash deploy/sync.sh
