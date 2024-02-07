@@ -1,0 +1,109 @@
+default:
+  image: node:16.0.0
+  interruptible: true
+# START WITH BASE NODE 16.X IMAGE 
+
+
+stages:
+  - setup
+  - build
+  - test
+  - staging
+
+
+# define workflow when to run 
+workflow:
+  rules:
+    - if: $CI_COMMIT_MESSAGE =~ /^chore\:.+$/
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+      when: always
+
+variables:
+  NODE_ENV: CI
+
+
+# dependencies_cache things we will cache across jobs 
+
+.dependencies_cache:
+  cache:
+    key:
+      demo:
+        - package-lock.json
+    paths:
+      - .npm
+    policy: pull
+
+# node_modules cache it once we have it so build and test can use it 
+# common step we always need it extends default cache and store node_modules in cache 
+
+setup:
+  stage: setup
+  script:
+    - npm ci --ignore-scripts
+  extends: .dependencies_cache
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+    policy: pull-push
+
+# use cache and no need npm ci again and store outcome of build /build path for 1week expiry 
+
+
+build:
+  stage: build
+  script:
+    - npm run build --if-present
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+    policy: pull
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 week
+  needs:
+    - setup
+  when: always
+
+unit-test:
+  stage: test
+  script:
+    - npm run build
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+    policy: pull
+  needs:
+    - setup
+  when: always
+
+# GET NODE_MODULES FROM CACHE 
+# SSH setup with EC2 Instance 
+
+deploy-dev:
+  stage: staging
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+    policy: pull
+  script:
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo "$EC2_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $EC2_HOST >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - scp -r ./* $EC2_USERNAME@$EC2_HOST:/home/ubuntu/node-api
+    - ssh $EC2_USERNAME@$EC2_HOST "cd /home/ubuntu/node-api && bash ./deploy/deploy.sh"
+  needs:
+    - build
+    - unit-test
+  when: always
+  only:
+    - develop
