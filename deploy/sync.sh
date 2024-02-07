@@ -8,7 +8,6 @@ echo "starting deployment process"
 
 # download new version of our application
 cd /home/ubuntu/node-api
-
 # install all the dependencies
 echo "installing dependencies"
 npm install
