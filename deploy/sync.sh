@@ -7,8 +7,7 @@ source ~/.nvm/nvm.sh
 echo "starting deployment process"
 
 # download new version of our application
-cd /home/ubuntu/url-shortner-nodejs
-git pull origin master
+cd /home/ubuntu/node-api
 
 # install all the dependencies
 echo "installing dependencies"
